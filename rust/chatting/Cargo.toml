@@ -1,0 +1,15 @@
+[package]
+name = "chatting"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+iter = "0.1.0"
+regex = "1.12.3"
+socket = "0.0.7"
+
+[profile.release]
+panic = "abort"
+
+[profile.dev]
+panic = "abort"
