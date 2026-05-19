@@ -1,7 +1,8 @@
+use std::fmt::format;
 use std::io::{ErrorKind, Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::time::Duration;
-use std::{process, time};
+use std::{process, thread, time};
 
 const TIMEOUT: u64 = 30;
 
@@ -51,7 +52,6 @@ impl Server {
     }
 
     pub fn start(&mut self) {
-
         let listener = TcpListener::bind(&self.ip).expect("CREATE LISTENER");
         listener.set_nonblocking(true).expect("Set non block");
 
@@ -67,9 +67,12 @@ impl Server {
                         addr.to_string()
                     );
 
-                    let (mut b, l) = Self::write_into_buf(addr.to_string());
+                    let (mut b, l) = Self::write_into_buf(addr.port().to_string());
                     Self::echo_to_client(&mut b[..l], &mut stream);
 
+                    println!("LISTENER TCP - SLEEP");
+                    thread::sleep(Duration::from_millis(20));
+                    println!("LISTENER TCP - SLEEP END");
                     loop {
                         let rv: String = Self::receive(&self, &mut stream, starttime);
 
@@ -78,7 +81,9 @@ impl Server {
                         }
                     }
                 }
-                Err(_e) => {}
+                Err(_e) => {
+                    thread::sleep(Duration::from_millis(20));
+                }
             }
         }
         println!("TIMEOUT_SHUTDOWN..\nClosing...");
@@ -150,7 +155,13 @@ impl Server {
                     };
                 }
                 false
-            }
+            },
+            "LIST" => {
+                let cc: Vec<&u16> = self.clients.iter().collect();
+                let (mut sb, len) = Self::write_into_buf(format!("{cc:#?}"));
+                Self::echo_to_client(&mut sb[..len], stream);
+                true
+            },
             s => {
                 let (mut sb, len) = Self::write_into_buf(s.to_string());
                 Self::echo_to_client(&mut sb[..len], stream);

@@ -1,8 +1,9 @@
 use regex::Regex;
 use std::fmt::{Display, Formatter, Result, format};
 use std::io::{self, Read, Write};
-use std::net::{Shutdown, TcpStream};
-use std::{process, time};
+use std::net::{Shutdown, TcpStream, UdpSocket};
+use std::time::Duration;
+use std::{process, thread, time};
 
 #[derive(Debug)]
 pub struct Client {
@@ -55,13 +56,14 @@ impl Client {
             println!("Connected to Server!");
 
             let get_udp = Self::recv(&mut stream, t);
-            self.udp_port = get_udp.parse::<i32>().expect("UDP-port");
+            self.udp_port = get_udp.parse::<i32>().unwrap();
             Some(stream)
         } else {
             println!("COULD NOT connect to Server!");
             None
         };
 
+        thread::sleep(Duration::from_millis(20));
         // SEND
 
         while t.elapsed().unwrap().as_secs() < 10 {
@@ -72,7 +74,12 @@ impl Client {
                     // RECV
                     let recv = Self::recv(&mut stream, t);
 
-                    println!("\nClient RECV:\t{}\tTime: {}", recv,t.elapsed().unwrap().as_millis());
+                    println!(
+                        "\nClient RECV:\t{}\tTime: {}",
+                        recv,
+                        t.elapsed().unwrap().as_millis()
+                    );
+
                     t = time::SystemTime::now();
 
                     if recv == "EXIT" {
@@ -83,6 +90,8 @@ impl Client {
                         println!("client {}: logging out..", self.udp_port);
                         outer_stream = None;
                         break;
+                    } else if recv == "UDP" {
+                        Self::client_udp(&self);
                     } else if recv == "C_SOCKED_CLOSED" {
                         break;
                     }
@@ -139,6 +148,76 @@ impl Client {
             }
             Err(_e) => "CLIENT_READ_ERR".into(),
         }
+    }
+
+    pub fn client_udp(&self) {
+        let mut socket = UdpSocket::bind(format!("{}:{}", &self.ip, &self.udp_port));
+        loop {
+            match socket {
+                Err(ref _e) => {
+                    println!("UDP - SLEEP..");
+                    thread::sleep(Duration::from_millis(20));
+                    println!("UDP - SLEEP END..");
+                }
+                Ok(ref mut _o) => {
+                    let s = _o;
+                    println!("ENTER port to connect:");
+                    let (mut buf, mut buffer) = ([0; 1024], [0; 1024]);
+                    let in1 = io::stdin().read(&mut buf).expect("BUF NOT READ");
+                    let bb = str::from_utf8(&buf).expect("REMOTE PORT").to_string();
+                    let mut conn = if buf.len() < 7 {
+                        s.connect(format!(
+                            "{}:{}",
+                            &self.ip,
+                            bb
+                        ))
+                    } else {
+                        s.connect(str::from_utf8(&buf).expect("REMOTE PORT").to_string())
+                    };
+                    match conn {
+                        Err(_e) => {
+                            let _tmp_sock = if buf.len() < 7 {
+                                UdpSocket::bind(format!("{}:{}",&self.ip, bb)).expect("CONN ERR");
+                                s.connect(format!(
+                                    "{}:{}",
+                                    &self.ip,
+                                    bb
+                                )).expect("REMOTE PORT");
+                            } else {
+                                UdpSocket::bind(format!("{}", bb)).expect("CONN ERR");
+                                s.connect(str::from_utf8(&buf).expect("REMOTE PORT").to_string());
+                            };
+                        },
+                        Ok(ref mut _o) => {
+                            let mut so = _o;
+                            println!("SOCK:\n{:#?}", so);
+                            println!("MSG:");
+                            let in2 = io::stdin().read(&mut buffer).expect("BUF NOT READ");
+                            let (mut b, l) = Self::write_into_buf(in2.to_string());
+
+                            println!("GOT SEND!");
+                            println!("UDP - SLEEP..");
+                            thread::sleep(Duration::from_millis(20));
+                            println!("UDP - SLEEP END..");
+                            buf = [0; 1024];
+                            println!("UDP - RECV..");
+                            let (amt, src) = so.recv_from(&mut buf).expect("UDP - RECEIVE ERR");
+                            println!("UDP - RECV END..");
+                            println!("\nReceiced: {} from {}\n", amt, src);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn write_into_buf(s: String) -> ([u8; 1024], usize) {
+        let mut buf = [0; 1024];
+        let sb = s.as_bytes();
+        let sb_len = sb.len();
+
+        buf[..sb_len].copy_from_slice(sb);
+        (buf, sb_len)
     }
 }
 
