@@ -1,1 +1,1 @@
-/home/timothy/Documents/Coding/Projects/projects/rust/chatting/target/debug/chatting: /home/timothy/Documents/Coding/Projects/projects/rust/chatting/src/client.rs /home/timothy/Documents/Coding/Projects/projects/rust/chatting/src/main.rs /home/timothy/Documents/Coding/Projects/projects/rust/chatting/src/server.rs
+/home/timothy/Documents/Coding/Projects/projects/rust/chatting/target/debug/chatting: /home/timothy/Documents/Coding/Projects/projects/rust/chatting/src/main.rs

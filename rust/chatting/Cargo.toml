@@ -4,12 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-iter = "0.1.0"
+cargo-example = "0.2.1"
 regex = "1.12.3"
 socket = "0.0.7"
-
-[profile.release]
-panic = "abort"
-
-[profile.dev]
-panic = "abort"
+tokio = {version = "1.52.3", features = ["full"]}
