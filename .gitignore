@@ -1,1 +1,4 @@
 rust/chatting/target/*
+rust/chatting/target/
+rust/lang/target/*
+rust/lang/target/

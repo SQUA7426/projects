@@ -1,0 +1,8 @@
+[package]
+name = "lang"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+array = "0.0.1"
+regex = "1.12.3"

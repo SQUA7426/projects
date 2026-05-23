@@ -2,12 +2,11 @@ use std::error::Error;
 use std::ops::Deref;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpListener, TcpStream};
+use tokio::net::{TcpListener};
 use tokio::sync::Mutex;
 
-use std::env;
+use std::{env};
 use std::fmt;
-use std::io;
 
 #[derive(Debug, Clone)]
 pub struct Server {
@@ -29,31 +28,6 @@ impl Server {
 
     pub async fn add(&mut self, addr: String) -> Result<(), Box<dyn Error>> {
         self.clients.insert(self.clients.len(), addr);
-        Ok(())
-    }
-
-    pub async fn send_client_ports(&self) -> Result<(), Box<dyn Error>> {
-        for client_addr in self.clients.clone().iter() {
-            println!("Connecting to {}", client_addr);
-            let mut stream = TcpStream::connect(client_addr).await?;
-            let s = self.to_string();
-
-            loop {
-                stream.writable().await?;
-
-                match stream.try_write(s.as_bytes()) {
-                    Ok(n) => {
-                        break;
-                    }
-                    Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-                        continue;
-                    }
-                    Err(e) => {
-                        return Err(e.into());
-                    }
-                }
-            }
-        }
         Ok(())
     }
 }
@@ -89,8 +63,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         }
                         println!("Server received: {}", rv);
 
-                        // Arc::make_mut(&mut ser).add(rv).await.unwrap();
-                        Arc::deref(& mut ser)
+                        Arc::deref(&mut ser)
                             .lock()
                             .await
                             .add(rv)
@@ -98,9 +71,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
                             .expect("MUT ARC FAILED");
                         println!("After JOIN: {}", ser.lock().await);
 
+                        let str: String = ser.lock().await.clone().to_string();
                         println!("Sending all ports to clients..");
-                        ser.lock().await.send_client_ports().await.unwrap();
-                        println!("All sent!!!");
+                        match sock.write_all(str.as_bytes()).await {
+                            Ok(_) => {
+                                let _ = sock.flush().await;
+                                println!("All sent!!!");
+                                break;
+                            },
+                            Err(e) if e.kind() == std::io::ErrorKind::BrokenPipe => {
+                                println!("Client disconnected prematurely (broken pipe), cleaning up connection...");
+                            },
+                            Err(e) => {
+                                eprintln!("An unexpected Err: {}", e);
+                            }
+                        }
                         n
                     }
                     Err(e) => {
@@ -114,7 +99,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 }
             }
         });
-        let _ = tokio::join!(thread);
     }
 }
 impl fmt::Display for Server {
