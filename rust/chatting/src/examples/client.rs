@@ -65,7 +65,16 @@ impl Client {
         let recv_sock = Arc::clone(&sock);
         let recv_peers = Arc::clone(&shared_peers);
 
-        let listener_task = tokio::spawn(async move {
+        let listener_task = Self::recv(recv_sock, recv_peers).await;
+
+        Self::send(sock, shared_peers).await;
+
+        listener_task.abort();
+        Ok(())
+    }
+
+    async fn recv(recv_sock: Arc<UdpSocket>, recv_peers: Arc<Mutex<Vec<String>>>) -> tokio::task::JoinHandle<()> {
+        tokio::spawn(async move {
             let mut buf = [0; 1024];
             let mut stdout = tokio::io::stdout();
 
@@ -92,8 +101,10 @@ impl Client {
                     }
                 }
             }
-        });
+        })
+    }
 
+    async fn send(sock: Arc<UdpSocket>, shared_peers: Arc<Mutex<Vec<String>>>) {
         let mut stdin_reader = BufReader::new(tokio::io::stdin()).lines();
         let mut stdout = tokio::io::stdout();
 
@@ -121,9 +132,6 @@ impl Client {
                 break;
             }
         }
-
-        listener_task.abort();
-        Ok(())
     }
 }
 

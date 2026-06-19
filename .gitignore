@@ -2,3 +2,6 @@ rust/chatting/target/*
 rust/chatting/target/
 rust/lang/target/*
 rust/lang/target/
+rust/bevy_june_26_jam/target/*
+rust/bevy_june_26_jam/target/
+

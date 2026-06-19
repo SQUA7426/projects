@@ -5,7 +5,8 @@ DIR = ./
 SRC = ./src/examples/
 
 CLIENT = client
-SERVER = server
+# SERVER = server
+SERVER = server2
 IP =
 
 .PHONY:

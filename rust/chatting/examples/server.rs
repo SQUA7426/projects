@@ -1,11 +1,9 @@
 use std::error::Error;
 use std::ops::Deref;
 use std::sync::Arc;
-use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpListener, TcpStream};
+use tokio::net::{TcpListener};
 use tokio::sync::Mutex;
-use tokio::time;
 
 use std::{env};
 use std::fmt;
@@ -65,7 +63,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         }
                         println!("Server received: {}", rv);
 
-                        // Arc::make_mut(&mut ser).add(rv).await.unwrap();
                         Arc::deref(&mut ser)
                             .lock()
                             .await
@@ -89,7 +86,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
                                 eprintln!("An unexpected Err: {}", e);
                             }
                         }
-                        // println!("All sent!!!");
                         n
                     }
                     Err(e) => {
@@ -103,7 +99,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 }
             }
         });
-        // let _ = tokio::join!(thread);
     }
 }
 impl fmt::Display for Server {

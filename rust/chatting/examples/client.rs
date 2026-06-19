@@ -60,14 +60,21 @@ impl Client {
         println!("UdpSocket bound to {}!", my_addr);
         println!("Type a message and press Enter to send to all peers.\n---");
 
-        // Wrap target peers in Arc<Mutex> so both the reading and writing tasks can access/update it
         let shared_peers = Arc::new(Mutex::new(target_peers));
 
         let recv_sock = Arc::clone(&sock);
         let recv_peers = Arc::clone(&shared_peers);
 
-        // Task 1: Background listener that dynamically updates the peer list
-        let listener_task = tokio::spawn(async move {
+        let listener_task = Self::recv(recv_sock, recv_peers).await;
+
+        Self::send(sock, shared_peers).await;
+
+        listener_task.abort();
+        Ok(())
+    }
+
+    async fn recv(recv_sock: Arc<UdpSocket>, recv_peers: Arc<Mutex<Vec<String>>>) -> tokio::task::JoinHandle<()> {
+        tokio::spawn(async move {
             let mut buf = [0; 1024];
             let mut stdout = tokio::io::stdout();
 
@@ -77,7 +84,6 @@ impl Client {
                         let msg = String::from_utf8_lossy(&buf[..len]).trim().to_string();
                         let sender_addr = addr.to_string();
 
-                        // DYNAMIC RECOGNITION: If this peer isn't in our list, add them!
                         {
                             let mut peers_guard = recv_peers.lock().await;
                             if !peers_guard.contains(&sender_addr) {
@@ -95,9 +101,10 @@ impl Client {
                     }
                 }
             }
-        });
+        })
+    }
 
-        // Task 2: Main loop for keyboard stdin input processing
+    async fn send(sock: Arc<UdpSocket>, shared_peers: Arc<Mutex<Vec<String>>>) {
         let mut stdin_reader = BufReader::new(tokio::io::stdin()).lines();
         let mut stdout = tokio::io::stdout();
 
@@ -113,7 +120,6 @@ impl Client {
                     continue;
                 }
 
-                // Lock the shared peer list to safely read the current targets
                 let peers_guard = shared_peers.lock().await;
                 for peer in peers_guard.iter() {
                     let _ = sock.send_to(message.as_bytes(), peer).await;
@@ -126,9 +132,6 @@ impl Client {
                 break;
             }
         }
-
-        listener_task.abort();
-        Ok(())
     }
 }
 
