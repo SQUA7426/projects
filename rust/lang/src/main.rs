@@ -10,37 +10,32 @@ use crate::evaluator::exe_stmt;
 use crate::{parser::Parser, tokenizer::Tokenizer};
 
 fn main() {
-        let _i: u16 = "adadsay".parse().expect("u16");
-    println!("{}", _i);
-}
+    let mut env = HashMap::new();
 
-// fn main() {
-//     let mut env = HashMap::new();
-//
-//     let tok = vec![
-//         "a = 1",
-//         "-- Comment a = 1",
-//         "while a <= 10 do x = 10 a = a + 1 end",
-//         "if a > 10 then x = 4 end",
-//     ];
-//     for i in 0..tok.len() {
-//         println!("Input: {}", tok[i]);
-//
-//         let t = Tokenizer::tokenize(tok[i].into());
-//         println!("Tokens: {}", t.to_string());
-//
-//         let mut p = Parser::new(t.get_tokens());
-//
-//         if let Some(stmt) = p.parse_statement() {
-//             println!("Parser created AST: {:?}\n", stmt);
-//             exe_stmt(&stmt, &mut env);
-//             println!("After executing Statement:\n{:?}", stmt);
-//         }
-//         println!("{}", "-".repeat(50));
-//         env.iter().for_each(|entry| println!("{entry:?}"));
-//         println!("{}", "-".repeat(50));
-//     }
-// }
+    let tok = vec![
+        "a = 1",
+        "-- Comment a = 1",
+        "while a <= 10 do x = 10 a = a + 1 end",
+        "if a > 10 then x = 4 end",
+    ];
+    for i in 0..tok.len() {
+        println!("Input: {}", tok[i]);
+
+        let t = Tokenizer::tokenize(tok[i].into());
+        println!("Tokens: {}", t.to_string());
+
+        let mut p = Parser::new(t.get_tokens());
+
+        if let Some(stmt) = p.parse_statement() {
+            println!("Parser created AST: {:?}\n", stmt);
+            exe_stmt(&stmt, &mut env);
+            println!("After executing Statement:\n{:?}", stmt);
+        }
+        println!("{}", "-".repeat(50));
+        env.iter().for_each(|entry| println!("{entry:?}"));
+        println!("{}", "-".repeat(50));
+    }
+}
 
 #[cfg(test)]
 mod test {
