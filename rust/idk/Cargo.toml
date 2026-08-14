@@ -1,2 +1,69 @@
+[package]
+name = "idk"
+version = "0.1.0"
+edition = "2024"
+
 [dependencies]
-cargo-example
+bevy = { version = "0.19.0", default-features = false, features = [
+  "default_app",
+  "dynamic_linking",
+  "bevy_winit",
+  "x11",
+  "multi_threaded",
+  "custom_cursor",
+
+  "bevy_render",
+  "bevy_core_pipeline",
+  "bevy_pbr",
+  "bevy_camera",
+  "bevy_light",
+  "bevy_mesh",
+  "bevy_material",
+  "bevy_shader",
+
+  "bevy_gizmos",
+  "bevy_gizmos_render",
+
+  "bevy_gltf",
+  "bevy_animation",
+
+  "bevy_ui",
+  "bevy_ui_render",
+  "bevy_input_focus",
+  "bevy_text",
+  "bevy_image",
+  "png",
+
+  "bevy_color",
+  "tonemapping_luts",
+  "zstd_rust",
+  "wayland",
+] }
+
+bevy_camera_controller = { version = "0.19.0", default-features = false, features = [
+  "free_camera",
+] }
+bevy_rapier3d = { version = "0.35.0", default-features = false, features = [
+  "dim3",
+] }
+rapier3d = "0.34.0"
+
+[dependencies.bevy_gltf]
+version = "0.19.0"
+features = ["bevy_animation"]
+
+[profile.dev]
+debug = 0
+strip = "symbols"
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+strip = "debuginfo"
