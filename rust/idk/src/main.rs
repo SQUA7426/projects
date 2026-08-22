@@ -1,5 +1,9 @@
 use bevy::prelude::*;
 
+use idk::components::{CamPlugin, PlayerPlugin};
+
 fn main() {
-    App::new().run();
+    App::new()
+    .add_systems((PlayerPlugin, CamPlugin))
+    .run();
 }
