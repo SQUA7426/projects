@@ -1,6 +1,8 @@
 pub mod components {
+    pub mod apartment;
     pub mod cam;
     pub mod player;
+    pub mod room;
 }
 
-use components::{cam::*, player::*,};
+use components::{apartment::*, cam::*, player::*, room::*,};

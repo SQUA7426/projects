@@ -3,6 +3,7 @@ use bevy::{
     color::palettes::basic::BLUE,
     prelude::*,
 };
+use bevy_rapier3d::prelude::*;
 use super::cam::{WorldModelCam, CamSensitivity, AccumulatedInput};
 
 const VIEW_MODEL_RENDER_LAYER: usize = 1;
@@ -56,12 +57,15 @@ fn spawn_player(mut cmds: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materi
         PlayerSpeed(10.0),
         Visibility::default(),
         player,
+        RigidBody::Dynamic,
+        Collider::capsule(player.half_height, player.half_width),
+        GravityScale(1.0),
         children![
             (
                 WorldModelCam,
                 Camera3d::default(),
                 Camera {
-                    oreder: 1,
+                    order: 1,
                     ..default()
                 },
                 Projection::from(PerspectiveProjection::default()),
