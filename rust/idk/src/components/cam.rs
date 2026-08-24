@@ -1,5 +1,13 @@
-use bevy::prelude::*;
+use bevy::{
+    input::mouse::AccumulatedMouseMotion,
+    prelude::*,
+};
 use std::f32::const::FRAC_PI_2;
+
+#[derive(Debug, Component, Clone, PartitialEq, Default, Deref, DerefMut)]
+pub struct AccumulatedInput {
+    movement: Vec2,
+}
 
 #[derive(Debug, Component, Deref, DerefMut)]
 pub struct CamSensitivity(Vec2);
@@ -17,7 +25,7 @@ pub struct CamPlugin;
 
 impl Plugin for CamPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, rotate_cam);
+        app.add_systems(Update, (rotate_camm, translate_cam));
     }
 }
 
@@ -36,4 +44,8 @@ fn rotate_cam(accumulated_mouse_motion: Res<AccumulatedMouseMotion>, player: Sin
 
         transform.rotation = Quat::from_euler(EulerRot::YXZ, yaw, pitch, roll);
     }
+}
+
+fn translate_cam(mut cam: Single<&mut Transform. With<Camera>>, player: Single<&Transform, (With<AccumulatedInput>, Without<Camera>)>) {
+    cam.translation = player.translation;
 }

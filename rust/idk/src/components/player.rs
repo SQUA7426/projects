@@ -1,12 +1,14 @@
 use bevy::{
     camera::visibility::RenderLayers,
     color::palettes::basic::BLUE,
-    input::mouse::AccumulatedMouseMotion,
     prelude::*,
 };
-use super::cam::{WorldModelCam, CamSensitivity};
+use super::cam::{WorldModelCam, CamSensitivity, AccumulatedInput};
 
 const VIEW_MODEL_RENDER_LAYER: usize = 1;
+
+#[derive(Debug, Component, Clone)] 
+struct PlayerSpeed(f32)
 
 #[derive(Component, Clone)]
 pub struct Player {
@@ -33,7 +35,9 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(self, app: mut App) {
-        app.add_systems(spawn_player);
+        app
+            .add_systems(Startup, spawn_player)
+            .add_systems(Update, accumulate_input);
     }
 }
 
@@ -48,6 +52,8 @@ fn spawn_player(mut cmds: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materi
         })),
         Transform::from_translation(player.pos.clone()),
         CamSensitivity::default(),
+        AccumulatedInput::default(),
+        PlayerSpeed(10.0),
         Visibility::default(),
         player,
         children![
@@ -63,4 +69,32 @@ fn spawn_player(mut cmds: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materi
             ),
         ],
     ));
+}
+
+fn accumulate_input(time: Res<Time>, kb_input: Res<ButtonInput<KeyCode>>, player: Single<(&mut AccumulatedInput, &Transform, &mut PlayerSpeed)>, With<Player>, cam: Single<&Transform, With<Camera>>) {
+    let (mut input, mut transform, mut player_speed) = player.into_inner();
+
+    const SPEED: f32 = 10.0;
+    input.movement = Vec2::ZERO;
+
+    if kb_input.just_pressed(KeyCode::KeyW) {
+        input.movement.y += 1.0;
+    }
+    if kb_input.just_pressed(KeyCode::KeyS) {
+        input.movement.y -= 1.0;
+    }
+    if kb_input.just_pressed(KeyCode::KeyA) {
+        input.movement.x -= 1.0;
+    }
+    if kb_input.just_pressed(KeyCode::KeyD) {
+        input.movement.x += 1.0;
+    }
+
+    let input_3d = Vec3 { x: input.movement.x, y: 0.0, z: -input.movement.y,};
+
+    let rotated_input = cam.rotation * input_3d;
+
+    player_speed.0 = rotated_input.clamp_lenght.max(1.0) * SPEED;
+
+    transform.translation += input_3d * time.delta_secs();
 }
