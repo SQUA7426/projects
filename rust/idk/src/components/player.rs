@@ -9,7 +9,7 @@ use super::cam::{WorldModelCam, CamSensitivity, AccumulatedInput};
 const VIEW_MODEL_RENDER_LAYER: usize = 1;
 
 #[derive(Debug, Component, Clone)] 
-struct PlayerSpeed(f32)
+pub struct PlayerSpeed(f32)
 
 #[derive(Component, Clone)]
 pub struct Player {
@@ -43,7 +43,7 @@ impl Plugin for PlayerPlugin {
 }
 
 fn spawn_player(mut cmds: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
-    let player = Player::new("Sam", 100.0);
+    let player = Player::new("Sam".into(), 100.0);
     let capsule = meshes.add(Capsule3d::new(player.half_height, player.half_width));
     cmds.spawn((
         Mesh3d(capsule),
@@ -101,4 +101,28 @@ fn accumulate_input(time: Res<Time>, kb_input: Res<ButtonInput<KeyCode>>, player
     player_speed.0 = rotated_input.clamp_lenght.max(1.0) * SPEED;
 
     transform.translation += input_3d * time.delta_secs();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn create_player() {
+        let player = Player::new("Sam".into(), 100.0);
+        let player_speed = PlayerSpeed(10.0);
+        assert_eq!(player.name,"Sam".into());
+        assert_eq!(player.health, 100.0);
+        assert_eq!(player.pos, Vec3::ZERO);
+        assert_eq!(player.half_height, 0.9);
+        assert_eq!(player.half_width, 1.0);
+        assert_eq!(player_speed, 10.0);
+    }
+
+    #[test]
+    fn player_plugin() {
+        let mut app = App::new();
+        app::add_plugins(PlayerPlugin).update();
+        assert!(app.is_plugin_added::<PlayerPlugin>());
+    }
 }

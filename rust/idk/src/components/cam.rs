@@ -49,3 +49,14 @@ fn rotate_cam(accumulated_mouse_motion: Res<AccumulatedMouseMotion>, player: Sin
 fn translate_cam(mut cam: Single<&mut Transform. With<Camera>>, player: Single<&Transform, (With<AccumulatedInput>, Without<Camera>)>) {
     cam.translation = player.translation;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn cam_plugin() {
+        let mut app = App::new();
+        app.add_plugins(CamPlugin).update();
+        assert!(app.is_plugin_added::<Cam>());
+    }
+}

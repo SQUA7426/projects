@@ -6,3 +6,14 @@ pub enum Rooms {
     Hallway,
     Room_X,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_room() {
+        let default_room = Rooms::default();
+        assert_eq!(default_room, Rooms::Hallway);
+    }
+}
