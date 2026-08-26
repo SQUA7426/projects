@@ -1,2 +1,4 @@
 rust/lang/target/*
 rust/lang/target/
+rust/idk/target/*
+rust/idk/target/

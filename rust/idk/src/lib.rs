@@ -5,4 +5,3 @@ pub mod components {
     pub mod room;
 }
 
-use components::{apartment::*, cam::*, player::*, room::*,};

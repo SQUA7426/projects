@@ -4,7 +4,7 @@ use bevy::prelude::*;
 pub enum Rooms {
     #[default]
     Hallway,
-    Room_X,
+    RoomX,
 }
 
 #[cfg(test)]
