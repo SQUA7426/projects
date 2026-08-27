@@ -1,4 +1,4 @@
-use bevy::{input::mouse::AccumulatedMouseMotion, prelude::*};
+use bevy::{camera::Viewport, input::mouse::AccumulatedMouseMotion, prelude::*};
 use std::f32::consts::FRAC_PI_2;
 
 use crate::components::player::Player;
@@ -25,17 +25,9 @@ pub struct CamPlugin;
 impl Plugin for CamPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Startup, spawn_cam)
+            .add_systems(Startup, spawn_map)
             .add_systems(Update, rotate_cam);
     }
-}
-
-fn spawn_cam(mut cmds: Commands) {
-    cmds.spawn((
-            Camera::default(),
-            Camera3d::default(),
-            Transform::from_xyz(0.0, 100.0, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
-    ));
 }
 
 fn rotate_cam(
@@ -57,6 +49,23 @@ fn rotate_cam(
 
         cam.rotation = Quat::from_euler(EulerRot::YXZ, yaw, pitch, roll);
     }
+}
+
+fn spawn_map(mut cmds: Commands) {
+    cmds.spawn((
+        Camera3d::default(),
+        Camera {
+            order: 2,
+            clear_color: ClearColorConfig::None,
+            viewport: Some(Viewport {
+                physical_position: UVec2::ZERO,
+                physical_size: UVec2::new(150, 150),
+                ..default()
+            }),
+            ..default()
+        },
+        Transform::from_xyz(0.0, 10.0, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
+    ));
 }
 
 #[cfg(test)]

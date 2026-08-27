@@ -1,15 +1,11 @@
+use super::cam::{AccumulatedInput, CamSensitivity, WorldModelCam};
 use avian3d::prelude::LinearVelocity;
-use bevy::{
-    camera::visibility::RenderLayers,
-    color::palettes::basic::BLUE,
-    prelude::*,
-};
+use bevy::{camera::visibility::RenderLayers, color::palettes::basic::BLUE, prelude::*};
 use bevy_rapier3d::prelude::*;
-use super::cam::{WorldModelCam, CamSensitivity, AccumulatedInput};
 
 const VIEW_MODEL_RENDER_LAYER: usize = 1;
 
-#[derive(Debug, Component, PartialEq)] 
+#[derive(Debug, Component, PartialEq)]
 struct PlayerSpeed(f32);
 
 #[derive(Component, Clone)]
@@ -37,13 +33,16 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_systems(Startup, spawn_player)
+        app.add_systems(Startup, spawn_player)
             .add_systems(Update, accumulate_input);
     }
 }
 
-fn spawn_player(mut cmds: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
+fn spawn_player(
+    mut cmds: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
     let player = Player::new("Sam".into(), 100.0);
     let capsule = meshes.add(Capsule3d::new(player.half_height, player.half_width));
     cmds.spawn((
@@ -65,20 +64,34 @@ fn spawn_player(mut cmds: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materi
         children![
             (
                 WorldModelCam,
-                // Camera3d::default(),
+                Camera3d::default(),
+                Projection::from(PerspectiveProjection {
+                    fov: 90.0_f32.to_radians(),
+                    ..default()
+                }),
+            ),
+            (
+                Camera3d::default(),
                 Camera {
                     order: 1,
+                    clear_color: ClearColorConfig::None,
                     ..default()
                 },
-                Projection::from(PerspectiveProjection::default()),
+                Projection::from(PerspectiveProjection {
+                    fov: 70.0_f32.to_radians(),
+                    ..default()
+                }),
                 RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
-                Transform::from_rotation(Quat::from_rotation_x(-0.1)),
             ),
         ],
     ));
 }
 
-fn accumulate_input(kb_input: Res<ButtonInput<KeyCode>>, player: Single<(&mut AccumulatedInput, &mut LinearVelocity), With<Player>>, cam: Single<&Transform, With<Camera>>) {
+fn accumulate_input(
+    kb_input: Res<ButtonInput<KeyCode>>,
+    player: Single<(&mut AccumulatedInput, &mut LinearVelocity), With<Player>>,
+    cam: Single<&Transform, With<Camera>>,
+) {
     let (mut input, mut velocity) = player.into_inner();
 
     const SPEED: f32 = 10.0;
@@ -97,7 +110,11 @@ fn accumulate_input(kb_input: Res<ButtonInput<KeyCode>>, player: Single<(&mut Ac
         input.movement.x += 1.0;
     }
 
-    let input_3d = Vec3 { x: input.movement.x, y: 0.0, z: -input.movement.y,};
+    let input_3d = Vec3 {
+        x: input.movement.x,
+        y: 0.0,
+        z: -input.movement.y,
+    };
 
     let (yaw, _pitch, _roll) = cam.rotation.to_euler(EulerRot::YXZ);
     let yaw_rot = Quat::from_rotation_y(yaw);

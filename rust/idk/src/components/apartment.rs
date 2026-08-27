@@ -1,5 +1,5 @@
 use super::room::Rooms;
-use bevy::{color::palettes::css::ORANGE, prelude::*};
+use bevy::{camera::visibility::RenderLayers, color::palettes::css::ORANGE, prelude::*};
 use bevy_rapier3d::prelude::*;
 
 pub struct ApartmentPlugin;
@@ -13,11 +13,9 @@ impl Plugin for ApartmentPlugin {
 
 fn spawn_light(mut cmds: Commands) {
     cmds.spawn((
-        PointLight {
-            radius: 15.0,
-            ..default()
-        },
-        Transform::from_translation(Vec3::new(0.0, 5.0, 0.0)),
+        DirectionalLight::default(),
+        Transform::from_xyz(0.0, 5.0, 0.0).looking_at(Vec3::ONE, Vec3::Y),
+        RenderLayers::from_layers(&[0, 1]),
     ));
 }
 
@@ -28,7 +26,7 @@ fn setup_apartment(
 ) {
     let normal = Vec3::new(0.0, 10.0, 0.0);
     cmds.spawn((
-        Mesh3d(meshes.add(Plane3d::new(normal, Vec2::splat(20.0)))),
+        Mesh3d(meshes.add(Plane3d::new(normal, Vec2::splat(200.0)))),
         MeshMaterial3d(materials.add(StandardMaterial {
             base_color: Color::from(ORANGE),
             ..default()
