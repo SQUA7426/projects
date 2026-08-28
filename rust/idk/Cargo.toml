@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-avian3d = "0.7.0"
 bevy = { version = "0.19.0", default-features = false, features = [
   "default_app",
   "dynamic_linking",
@@ -44,7 +43,7 @@ bevy = { version = "0.19.0", default-features = false, features = [
 bevy_camera_controller = { version = "0.19.0", default-features = false, features = [
   "free_camera",
 ] }
-bevy_rapier3d = { version = "0.35.0", default-features = false, features = [
+bevy_rapier3d = { version = "0.36.0", default-features = false, features = [
   "dim3",
 ] }
 rapier3d = "0.34.0"
@@ -54,11 +53,11 @@ version = "0.19.0"
 features = ["bevy_animation"]
 
 [profile.dev]
-debug = 0
+debug = "line-tables-only"
 strip = "symbols"
 
 [profile.dev.package."*"]
-opt-level = 3
+opt-level = 1
 
 [profile.release]
 codegen-units = 1

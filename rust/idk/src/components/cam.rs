@@ -1,12 +1,13 @@
-use bevy::{camera::Viewport, input::mouse::AccumulatedMouseMotion, prelude::*};
+use bevy::{
+    camera::Viewport,
+    input::mouse::AccumulatedMouseMotion,
+    prelude::*,
+    window::{CursorGrabMode, CursorOptions, PrimaryWindow},
+};
+use bevy_rapier3d::dynamics::Velocity;
 use std::f32::consts::FRAC_PI_2;
 
 use crate::components::player::Player;
-
-#[derive(Debug, Component, Clone, PartialEq, Default, Deref, DerefMut)]
-pub struct AccumulatedInput {
-    pub movement: Vec2,
-}
 
 #[derive(Debug, Component, Deref, DerefMut)]
 pub struct CamSensitivity(Vec2);
@@ -20,35 +21,80 @@ impl Default for CamSensitivity {
 #[derive(Debug, Component)]
 pub struct WorldModelCam;
 
+#[derive(Debug)]
 pub struct CamPlugin;
 
 impl Plugin for CamPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_systems(Startup, spawn_map)
-            .add_systems(Update, rotate_cam);
+        app.add_systems(Startup, (spawn_map, grab_cursor))
+            .add_systems(Update, (rotate_cam, accumulate_input).chain());
+    }
+}
+
+fn grab_cursor(mut cursor_options: Query<&mut CursorOptions, With<PrimaryWindow>>) {
+    if let Ok(mut cursor) = cursor_options.single_mut() {
+        cursor.grab_mode = CursorGrabMode::Locked;
+        cursor.visible = false;
     }
 }
 
 fn rotate_cam(
     accumulated_mouse_motion: Res<AccumulatedMouseMotion>,
-    player: Single<&CamSensitivity, With<Player>>,
-    mut cam: Single<&mut Transform, With<Camera>>,
+    player: Single<(&mut Transform, &CamSensitivity), With<Player>>,
 ) {
-    let cam_sensitivity = player.into_inner();
     let delta = accumulated_mouse_motion.delta;
-    if delta != Vec2::ZERO {
-        let delta_yaw = -delta.x * cam_sensitivity.x;
-        let delta_pitch = -delta.y * cam_sensitivity.y;
-
-        let (yaw, pitch, roll) = cam.rotation.to_euler(EulerRot::YXZ);
-        let yaw = yaw + delta_yaw;
-
-        const PITCH_LIMIT: f32 = FRAC_PI_2 - 0.01;
-        let pitch = (pitch + delta_pitch).clamp(-PITCH_LIMIT, PITCH_LIMIT);
-
-        cam.rotation = Quat::from_euler(EulerRot::YXZ, yaw, pitch, roll);
+    if delta == Vec2::ZERO {
+        return;
     }
+
+    const ROT_SPEED: f32 = 0.1;
+
+    let (mut transform, cam_sensitivity) = player.into_inner();
+    let dy = -delta.x * cam_sensitivity.x * ROT_SPEED;
+    let _dp = -delta.y * cam_sensitivity.y * ROT_SPEED;
+
+    let (yaw, _pitch, roll) = transform.rotation.to_euler(EulerRot::YXZ);
+    let accumulated_yaw = yaw + dy;
+
+    transform.rotation = Quat::from_euler(EulerRot::YXZ, accumulated_yaw, 0.0, roll);
+}
+
+fn accumulate_input(
+    kb_input: Res<ButtonInput<KeyCode>>,
+    player: Single<(&mut Velocity, &Transform), With<Player>>,
+) {
+    let (mut velocity, transform) = player.into_inner();
+
+    const SPEED: f32 = 10.0;
+    let mut input = Vec2::ZERO;
+
+    if kb_input.pressed(KeyCode::KeyW) {
+        input.y += 1.0;
+    }
+    if kb_input.pressed(KeyCode::KeyS) {
+        input.y -= 1.0;
+    }
+    if kb_input.pressed(KeyCode::KeyA) {
+        input.x -= 1.0;
+    }
+    if kb_input.pressed(KeyCode::KeyD) {
+        input.x += 1.0;
+    }
+
+    let input_3d = Vec3 {
+        x: input.x,
+        y: 0.0,
+        z: -input.y,
+    };
+
+    let (yaw, _pitch, _roll) = transform.rotation.to_euler(EulerRot::YXZ);
+    let yaw_rot = Quat::from_rotation_y(yaw);
+    let rotated_input = yaw_rot * input_3d;
+
+    let horitontal = rotated_input.clamp_length_max(1.0) * SPEED;
+
+    velocity.linear.x = horitontal.x;
+    velocity.linear.z = horitontal.z;
 }
 
 fn spawn_map(mut cmds: Commands) {
@@ -64,18 +110,26 @@ fn spawn_map(mut cmds: Commands) {
             }),
             ..default()
         },
-        Transform::from_xyz(0.0, 10.0, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
+        Transform::from_xyz(0.0, 100.0, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
     ));
 }
 
 #[cfg(test)]
 mod tests {
+    use bevy::state::app::StatesPlugin;
+
     use super::*;
 
     #[test]
     fn cam_plugin() {
         let mut app = App::new();
-        app.add_plugins(CamPlugin).update();
+        app.add_plugins((
+            MinimalPlugins,
+            StatesPlugin,
+            AssetPlugin::default(),
+            CamPlugin,
+        ))
+        .update();
         assert!(app.is_plugin_added::<CamPlugin>());
     }
 }
