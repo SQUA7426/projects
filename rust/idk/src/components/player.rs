@@ -1,5 +1,3 @@
-use std::ops::Not;
-
 use super::cam::{CamSensitivity, WorldModelCam};
 use bevy::{camera::visibility::RenderLayers, color::palettes::basic::BLUE, prelude::*};
 use bevy_rapier3d::prelude::*;

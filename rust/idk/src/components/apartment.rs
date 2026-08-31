@@ -1,6 +1,7 @@
 use super::room::Rooms;
 use bevy::{
-    camera::visibility::RenderLayers,
+    animation::graph::AnimationGraph,
+    // camera::visibility::RenderLayers,
     color::palettes::css::{BLACK, BLUE, GREEN, ORANGE, RED},
     prelude::*,
 };
@@ -11,17 +12,12 @@ pub struct ApartmentPlugin;
 
 impl Plugin for ApartmentPlugin {
     fn build(&self, app: &mut App) {
-        app.init_state::<Rooms>()
-            .add_systems(Startup, (setup_apartment, spawn_light));
+        app.init_asset::<AnimationGraph>()
+            .init_asset::<AnimationClip>()
+            .init_asset::<WorldAsset>()
+            .init_state::<Rooms>()
+            .add_systems(Startup, setup_apartment);
     }
-}
-
-fn spawn_light(mut cmds: Commands) {
-    cmds.spawn((
-        DirectionalLight::default(),
-        Transform::from_xyz(0.0, 5.0, 0.0).looking_at(Vec3::ONE, Vec3::Y),
-        RenderLayers::from_layers(&[0, 1]),
-    ));
 }
 
 fn setup_apartment(
@@ -55,7 +51,7 @@ fn setup_apartment(
     .for_each(|(i, v)| {
         let material_color: Color = Color::from(colors[i]);
         cmds.spawn((
-            Transform::from_translation(*v),
+            Transform::from_translation(*v).with_scale(Vec3::new(4.0, 4.0, 4.0)),
             Mesh3d(meshes.add(Cuboid::default())),
             MeshMaterial3d(materials.add(StandardMaterial {
                 base_color: material_color,
@@ -63,7 +59,7 @@ fn setup_apartment(
             })),
             RigidBody::Fixed,
             ColliderMassProperties::Mass(1.0),
-            Collider::cuboid(0.5, 0.5, 0.0),
+            Collider::cuboid(2.0, 2.0, 0.0),
         ));
     });
 }

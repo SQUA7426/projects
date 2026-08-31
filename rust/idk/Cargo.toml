@@ -20,6 +20,7 @@ bevy = { version = "0.19.0", default-features = false, features = [
   "bevy_mesh",
   "bevy_material",
   "bevy_shader",
+  "mp3",
 
   "bevy_gizmos",
   "bevy_gizmos_render",
@@ -39,6 +40,7 @@ bevy = { version = "0.19.0", default-features = false, features = [
   "zstd_rust",
   "wayland",
 ] }
+bevy_audio = "0.19.1"
 
 bevy_camera_controller = { version = "0.19.0", default-features = false, features = [
   "free_camera",

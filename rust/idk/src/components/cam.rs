@@ -5,7 +5,6 @@ use bevy::{
     window::{CursorGrabMode, CursorOptions, PrimaryWindow},
 };
 use bevy_rapier3d::dynamics::Velocity;
-use std::f32::consts::FRAC_PI_2;
 
 use crate::components::player::Player;
 

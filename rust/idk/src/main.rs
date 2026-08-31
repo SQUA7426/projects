@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use idk::components::{apartment::ApartmentPlugin, cam::CamPlugin, player::PlayerPlugin};
+use idk::components::{animations::AnimationsPlugin, apartment::ApartmentPlugin, cam::CamPlugin, items::inventory::InventoryPlugin, player::PlayerPlugin, sound::SoundPlugin};
 
 fn main() {
     App::new()
@@ -17,6 +17,6 @@ fn main() {
                 }),
             RapierPhysicsPlugin::<NoUserData>::default(),
         ))
-        .add_plugins((ApartmentPlugin, CamPlugin, PlayerPlugin))
+        .add_plugins((AnimationsPlugin,ApartmentPlugin, CamPlugin, PlayerPlugin, SoundPlugin, InventoryPlugin))
         .run();
 }
